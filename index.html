@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Safari's own Venmo banner. Safari checks whether the app is installed and
+     shows OPEN (deep-links into the app with the payment filled in) or VIEW
+     (App Store). Keep the handle and amount in sync with CONFIG below. -->
+<meta name="apple-itunes-app" content="app-id=351727428, app-argument=venmo://paycharge?txn=pay&amp;recipients=Chester-Park-1&amp;amount=15&amp;note=Keychain">
 <title>Dreams Kick Off UNC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -322,6 +326,7 @@ ol.steps p{margin:0;font-size:15px}
   color:var(--ink);margin-top:6px;letter-spacing:.02em;
 }
 .pay-cash{font-size:13.5px;color:var(--ink-faint);margin-top:12px;line-height:1.55}
+.pay-cash a{color:inherit;text-decoration:underline}
 .pay-check .whois{display:block;margin-top:10px;font-size:12.5px;line-height:1.55;color:var(--ink-faint)}
 .btn--form{
   width:100%;text-align:center;display:block;margin-top:14px;
@@ -1236,7 +1241,12 @@ function render(){
          build the three routes ourselves instead:
            desktop  -> Venmo's web pay page (where their server sends desktops)
            Android  -> intent:// with a Play Store fallback (Chrome handles it)
-           iOS      -> venmo:// from the tap, then App Store if nothing took over */
+           iOS      -> venmo:// straight from the tap. iOS gives us no reliable
+                       way to tell whether the app is installed, and a timer
+                       guess fired the App Store on top of an open Venmo, so the
+                       not-installed case is handled by Safari's own app banner
+                       (see <meta name="apple-itunes-app"> in <head>) plus the
+                       plain App Store link under the button. */
       const q = "txn=pay&recipients=" + encodeURIComponent(CONFIG.venmoHandle)
               + "&amount=15&note=" + encodeURIComponent("Keychain");
       const webUrl = "https://account.venmo.com/payment-link?" + q;
@@ -1254,35 +1264,31 @@ function render(){
                + "S.browser_fallback_url=" + encodeURIComponent(CONFIG.venmoPlayStore) + ";end";
       } else if (isIOS){
         a.href = appUrl;
-        a.addEventListener("click", function(e){
-          e.preventDefault();
-          const WAIT = 2500;
-          const start = Date.now();
-          let handled = false;
-          const took = function(){ handled = true; };
-          // If Venmo opened, the page goes hidden and we stand down.
-          document.addEventListener("visibilitychange", function(){ if (document.hidden) took(); }, { once: true });
-          window.addEventListener("pagehide", took, { once: true });
-          setTimeout(function(){
-            if (handled || document.hidden) return;
-            // Timer fired far too late = tab was suspended = the app took over.
-            if (Date.now() - start > WAIT + 1500) return;
-            window.location.href = CONFIG.venmoAppStore;
-          }, WAIT);
-          window.location.href = appUrl;
-        });
       } else {
         a.href = webUrl;
         a.target = "_blank"; a.rel = "noopener";
       }
       box.appendChild(a);
 
+      if (isIOS){
+        const store = document.createElement("p");
+        store.className = "pay-cash";
+        store.appendChild(document.createTextNode("No Venmo on your phone? "));
+        const sl = document.createElement("a");
+        sl.href = CONFIG.venmoAppStore;
+        sl.textContent = "Get it on the App Store";
+        store.appendChild(sl);
+        store.appendChild(document.createTextNode(
+          ", then come back and tap the button. (If Safari says \u201cthe address is invalid\u201d, "
+          + "that's what it means \u2014 Venmo isn't installed yet.)"));
+        box.appendChild(store);
+      }
+
       const chk = document.createElement("div");
       chk.className = "pay-check";
       chk.appendChild(document.createTextNode(
-        "It'll open Venmo with the amount already filled in. No Venmo on your phone yet? It'll take you "
-        + "to the App Store instead \u2014 install it, come back here, and tap again. Before you send, "
-        + "check the account you're paying says:"));
+        "It'll open Venmo with the amount already filled in. Before you send, check the account you're "
+        + "paying says:"));
       const who = document.createElement("span");
       who.className = "who";
       who.textContent = "@" + CONFIG.venmoHandle + (CONFIG.venmoName ? "  \u00b7  " + CONFIG.venmoName : "");
