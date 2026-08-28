@@ -952,6 +952,10 @@ const CONFIG = {
   // Fill these two in and the pay button appears on its own.
   venmoHandle: "Chester-Park-1",   // no @, exactly as it is in the profile URL
   venmoName:   "Chester Park",     // the name Venmo shows, so buyers can check the account
+  // Where phones without the Venmo app get sent instead of a dead "address is
+  // invalid" tab. Venmo has no Universal Link for pay links, so we do it here.
+  venmoAppStore: "https://apps.apple.com/us/app/venmo/id351727428",
+  venmoPlayStore: "https://play.google.com/store/apps/details?id=com.venmo",
   formUrl:     "https://forms.gle/rRhfWAFeUoMKKoQLA",
 
   // The published CSV of the tracker's "Live" tab. Until this is set the page
@@ -1227,19 +1231,58 @@ function render(){
       const box = document.createElement("div");
       box.className = "pay";
 
+      /* Venmo's own server sends phones a bare `venmo://` redirect with no
+         fallback, so a phone without the app gets "address is invalid". We
+         build the three routes ourselves instead:
+           desktop  -> Venmo's web pay page (where their server sends desktops)
+           Android  -> intent:// with a Play Store fallback (Chrome handles it)
+           iOS      -> venmo:// from the tap, then App Store if nothing took over */
+      const q = "txn=pay&recipients=" + encodeURIComponent(CONFIG.venmoHandle)
+              + "&amount=20&note=" + encodeURIComponent("Keychain");
+      const webUrl = "https://account.venmo.com/payment-link?" + q;
+      const appUrl = "venmo://paycharge?" + q;
+      const ua = navigator.userAgent || "";
+      const isIOS = /iPhone|iPad|iPod/.test(ua)
+                 || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPad in desktop mode
+      const isAndroid = /Android/.test(ua);
+
       const a = document.createElement("a");
       a.className = "btn";
-      a.href = "https://venmo.com/" + CONFIG.venmoHandle
-             + "?txn=pay&amount=20&note=" + encodeURIComponent("Keychain");
-      a.target = "_blank"; a.rel = "noopener";
       a.textContent = "PAY $20 WITH VENMO";
+      if (isAndroid){
+        a.href = "intent://paycharge?" + q + "#Intent;scheme=venmo;package=com.venmo;"
+               + "S.browser_fallback_url=" + encodeURIComponent(CONFIG.venmoPlayStore) + ";end";
+      } else if (isIOS){
+        a.href = appUrl;
+        a.addEventListener("click", function(e){
+          e.preventDefault();
+          const WAIT = 2500;
+          const start = Date.now();
+          let handled = false;
+          const took = function(){ handled = true; };
+          // If Venmo opened, the page goes hidden and we stand down.
+          document.addEventListener("visibilitychange", function(){ if (document.hidden) took(); }, { once: true });
+          window.addEventListener("pagehide", took, { once: true });
+          setTimeout(function(){
+            if (handled || document.hidden) return;
+            // Timer fired far too late = tab was suspended = the app took over.
+            if (Date.now() - start > WAIT + 1500) return;
+            window.location.href = CONFIG.venmoAppStore;
+          }, WAIT);
+          window.location.href = appUrl;
+        });
+      } else {
+        a.href = webUrl;
+        a.target = "_blank"; a.rel = "noopener";
+      }
       box.appendChild(a);
 
       const chk = document.createElement("div");
       chk.className = "pay-check";
       chk.appendChild(document.createTextNode(
-        "It'll open Venmo with the amount already filled in. Before you send, check the account you're "
-        + "paying says:"));
+        "It'll open Venmo with the amount already filled in. No Venmo on your phone yet? It'll take you "
+        + "to the App Store instead \u2014 install it, come back here, and tap again. Before you send, "
+        + "check the account you're paying says:"));
       const who = document.createElement("span");
       who.className = "who";
       who.textContent = "@" + CONFIG.venmoHandle + (CONFIG.venmoName ? "  \u00b7  " + CONFIG.venmoName : "");
