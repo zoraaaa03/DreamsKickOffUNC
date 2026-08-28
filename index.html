@@ -551,7 +551,7 @@ details.letter img{
     </h1>
 
     <p class="tag">
-      <span>Twenty bucks.</span>
+      <span>Fifteen bucks.</span>
       <span>One Nike keychain.</span>
       <span>Get a chance to win exciting prizes.</span>
     </p>
@@ -570,7 +570,7 @@ details.letter img{
     </div>
 
     <div class="pricetag">
-      <span class="amt">$20</span>
+      <span class="amt">$15</span>
       <span class="unit">EACH</span>
     </div>
 
@@ -642,7 +642,7 @@ details.letter img{
     <h2>Five steps, about a minute</h2>
 
     <ol class="steps">
-      <li><p><strong>Send $20.</strong> Venmo works, or cash if you run into us on campus.</p></li>
+      <li><p><strong>Send $15.</strong> Venmo works, or cash if you run into us on campus.</p></li>
       <li><p><strong>Tell us who you are.</strong> A few quick questions so we can match your payment to
       your entry, plus an address so we can get your keychain to you.</p></li>
       <li><p><strong>Your number goes up on the board.</strong> You'll see it show up on the bulletin
@@ -771,7 +771,7 @@ details.letter img{
 
     <details>
       <summary>Is this gambling?</summary>
-      <p>No. You're buying a keychain for $20 and it's yours no matter what happens next. The number
+      <p>No. You're buying a keychain for $15 and it's yours no matter what happens next. The number
       comes with it. If you'd rather not spend anything there's a free way in through Instagram, though
       those are limited and come with conditions, so DM us and ask.</p>
     </details>
@@ -784,7 +784,7 @@ details.letter img{
 
     <details>
       <summary>Can I buy more than one?</summary>
-      <p>Sure. Every $20 is another keychain and another number. Worth knowing though: you can only win
+      <p>Sure. Every $15 is another keychain and another number. Worth knowing though: you can only win
       one prize, so a second number raises your chance of winning something, not how much you can win.</p>
     </details>
 
@@ -845,7 +845,7 @@ details.letter img{
 
     <details>
       <summary>How to enter</summary>
-      <p>Buy a keychain for $20. Each keychain comes with one numbered entry, issued once payment has been
+      <p>Buy a keychain for $15. Each keychain comes with one numbered entry, issued once payment has been
       received. There is no limit on how many you may buy, but see "One prize per person" below.</p>
       <p>You may also enter without buying anything. See "No purchase necessary" above.</p>
       <p>No more than 500 entries will be issued in total.</p>
@@ -1238,7 +1238,7 @@ function render(){
            Android  -> intent:// with a Play Store fallback (Chrome handles it)
            iOS      -> venmo:// from the tap, then App Store if nothing took over */
       const q = "txn=pay&recipients=" + encodeURIComponent(CONFIG.venmoHandle)
-              + "&amount=20&note=" + encodeURIComponent("Keychain");
+              + "&amount=15&note=" + encodeURIComponent("Keychain");
       const webUrl = "https://account.venmo.com/payment-link?" + q;
       const appUrl = "venmo://paycharge?" + q;
       const ua = navigator.userAgent || "";
@@ -1248,7 +1248,7 @@ function render(){
 
       const a = document.createElement("a");
       a.className = "btn";
-      a.textContent = "PAY $20 WITH VENMO";
+      a.textContent = "PAY $15 WITH VENMO";
       if (isAndroid){
         a.href = "intent://paycharge?" + q + "#Intent;scheme=venmo;package=com.venmo;"
                + "S.browser_fallback_url=" + encodeURIComponent(CONFIG.venmoPlayStore) + ";end";
