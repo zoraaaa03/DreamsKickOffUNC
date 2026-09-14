@@ -840,7 +840,7 @@ details.letter img{
     <details>
       <summary>Dates</summary>
       <ul>
-        <li><strong>Entries open:</strong> TBD</li>
+        <li><strong>Entries open:</strong> Aug 25, 2026</li>
         <li><strong>Entries close:</strong> Sep 13, 2026</li>
         <li><strong>Drawing:</strong> TBD, live on Instagram</li>
         <li><strong>Prize delivered:</strong> within 7 days of the drawing</li>
@@ -1428,7 +1428,7 @@ function render(){
   /* bulletin board */
   const notes = document.getElementById("notes");
   notes.textContent = "";
-  const shown = CONFIG.wall.slice(-40);
+  const shown = CONFIG.wall.slice(0, 40);
   shown.forEach(function(row){
     const el = document.createElement("span");
     el.className = "note";
@@ -1441,7 +1441,7 @@ function render(){
   });
   const bnote = document.getElementById("board-note");
   bnote.textContent = CONFIG.wall.length
-    ? "Showing the most recent " + shown.length + " of " + CONFIG.wall.length + " entries issued."
+    ? "Showing the first " + shown.length + " of " + CONFIG.wall.length + " entries issued."
     : "No entries issued yet. Yours could be #1.";
 }
 
